@@ -1,0 +1,183 @@
+<style>
+	body {
+		font-size: 0;
+		margin: 0;
+	}
+
+	.page {
+		width: 8.5in;
+		height: 11in;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.card-set {
+		width: calc((190 + 4 * 2) * 4px);
+		height: calc((250 + 4 * 2) * 4px);
+	}
+
+	.container {
+		width: 190px;
+		height: 250px;
+		border: 4px solid;
+		font-family: sans-serif;
+		display: inline-flex;
+		flex-direction: column;
+		position: relative;
+	}
+
+	#name {
+		font-size: 14px;
+		flex-grow: 1;
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+	}
+
+	#terror-1, #terror-2, #terror-3 {
+		font-size: 12px;
+		padding: 10px;
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-evenly;
+		text-align: center;
+	}
+</style>
+
+<body>
+	<template id="card">
+		<div class="container">
+			<div id="name"></div>
+			<div id="terror-1"></div>
+			<div id="terror-2"></div>
+			<div id="terror-3"></div>
+		</div>
+	</template>
+
+	<div id="cards"></div>
+</body>
+
+<script>
+	let data = [
+		[
+			"Fear of the Unseen",
+			"Each player removes 1 Explorer / Town from a land with SacredSite.",
+			"Each player removes 1 Explorer / Town from a land with Presence.",
+			"Each player removes 1 Explorer / Town from a land with Presence, or 1 City from a land with SacredSite.",
+		],
+		[
+			"Scapegoats",
+			"Each Town destroys 1 Explorer in its land.",
+			"Each Town destroys 1 Explorer in its land. Each City destroys 2 Explorer in its land.",
+			"Destroy all Explorer in lands with Town / City. Each City destroys 1 Town in its land.",
+		],
+		[
+			"Emigration Accelerates",
+			"Each player removes 1 Explorer from a Coastal land.",
+			"Each player removes 1 Explorer / Town from a Coastal land.",
+			"Each player removes 1 Explorer / Town from any land.",
+		],
+		[
+			"Dahan on their Guard",
+			"In each land, Defend 1 per Dahan.",
+			"In each land with Dahan, Defend 1, plus an additional Defend 1 per Dahan.",
+			"In each land, Defend 2 per Dahan.",
+		],
+		[
+			"Tall Tales of Savagery",
+			"Each player removes 1 Explorer from a land with Dahan.",
+			"Each player removes 2 Explorer or 1 Town from a land with Dahan.",
+			"Remove 2 Explorer or 1 Town from each land with Dahan. Then, remove 1 City from each land with at least 2 Dahan.",
+		],
+		[
+			"Retreat!",
+			"Each player may Push up to 2 Explorer from an Inland land.",
+			"Each player may Push up to 3 Explorer / Town from an Inland land.",
+			"Each player may Push any number of Explorer / Town from one land.",
+		],
+		[
+			"Dahan Raid",
+			"Each player chooses a different land with Dahan. 1 Damage there.",
+			"Each player chooses a different land with Dahan. 1 Damage per Dahan there.",
+			"Each player chooses a different land with Dahan. 2 Damage per Dahan there.",
+		],
+		[
+			"Dahan Enheartened",
+			"Each player may Push 1 Dahan from a land with Invaders or Gather 1 Dahan into a land with Invaders.",
+			"Each player chooses a different land. In chosen lands: Gather up to 2 Dahan, then 1 Damage if Dahan are present.",
+			"Each player chooses a different land. In chosen lands: Gather up to 2 Dahan, then 1 Damage per Dahan present.",
+		],
+		[
+			"Avoid the Dahan",
+			"Invaders do not Explore into lands with at least 2 Dahan.",
+			"Invaders do not Build in lands where Dahan outnumber Town / City.",
+			"Invaders do not Build in lands with Dahan.",
+		],
+		[
+			"Seek Safety",
+			"Each player may Push 1 Explorer into a land with more Town / City than the land it came from.",
+			"Each player may Gather 1 Explorer into a land with Town / City, or Gather 1 Town into a land with City.",
+			"Each player may remove up to 3 Health worth of Invaders from a land without Town.",
+		],
+		[
+			"Wary of the Interior",
+			"Each player removes 1 Explorer from an Inland land.",
+			"Each player removes 1 Explorer / Town from an Inland land.",
+			"Each player removes 1 Explorer / Town from any land.",
+		],
+		[
+			"Belief Takes Root",
+			"Defend 2 in all lands with Presence.",
+			"Defend 2 in all lands with Presence. Each Spirit gains 1 Energy per SacredSite they have in lands with Invaders.",
+			"Each player chooses a different land and removes up to 2 Health worth of Invaders per Presence there.",
+		],
+		[
+			"Isolation",
+			"Each player removes 1 Explorer / Town from a land where it is the only Invader.",
+			"Each player removes 1 Explorer / Town from a land with 2 or fewer Invaders.",
+			"Each player removes an Invader from a land with 2 or fewer Invaders.",
+		],
+		[
+			"Overseas Trade Seem Safer",
+			"Defend 3 in all Coastal lands.",
+			"Defend 6 in all Coastal lands. Invaders do not Build City in Coastal lands this turn.",
+			"Defend 9 in all Coastal lands. Invaders do not Build in Coastal lands this turn.",
+		],
+		[
+			"Trade Suffers",
+			"Invaders do not Build in lands with City.",
+			"Each player may replace 1 Town with 1 Explorer in a Coastal land.",
+			"Each player may replace 1 City with 1 Town or 1 Town with 1 Explorer in a Coastal land.",
+		],
+	];
+
+	let newCardSet = () => {
+		let page = document.createElement('div');
+		page.classList.add('page');
+		document.querySelector('#cards').appendChild(page);
+
+		let cardSet = document.createElement('div');
+		cardSet.classList.add('card-set');
+		page.appendChild(cardSet);
+		return cardSet;
+	};
+
+	let cardSet;
+	let template = document.querySelector('#card');
+	data.map((d, i) => {
+		if (!(i % 16))
+			cardSet = newCardSet();
+
+		let clone = template.content.cloneNode(true);
+		clone.querySelector('#name').textContent = d[0];
+		clone.querySelector('#terror-1').textContent = d[1];
+		clone.querySelector('#terror-2').textContent = d[2];
+		clone.querySelector('#terror-3').textContent = d[3];
+
+		cardSet.appendChild(clone);
+	});
+</script>

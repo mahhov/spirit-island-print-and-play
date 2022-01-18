@@ -1,0 +1,209 @@
+<style>
+	canvas {
+		padding: 5px;
+	}
+</style>
+
+<body></body>
+
+<script>
+	// let prefix = 'https://github.com/oberien/spirit-island-card-katalog/tree/master/imgs/powers';
+	let powerPrefix = 'https://sick.oberien.de/imgs/powers';
+	let fearPrefix = 'https://sick.oberien.de/imgs/fears/';
+
+	// major, minor, unique
+	let powerNames = [
+		'accelerated_rot.jpg',
+		'blazing_renewal.jpg',
+		'cleansing_floods.jpg',
+		'dissolve_the_bonds_of_kinship.jpg',
+		'entwined_power.jpg',
+		'indomitable_claim.jpg',
+		'infinite_vitality.jpg',
+		'mists_of_oblivion.jpg',
+		'paralyzing_fright.jpg',
+		'pillar_of_living_flame.jpg',
+		'poisoned_land.jpg',
+		'powerstorm.jpg',
+		'talons_of_lightning.jpg',
+		'terrifying_nightmares.jpg',
+		'the_jungle_hungers.jpg',
+		'the_land_thrashes_in_furious_pain.jpg',
+		'the_trees_and_stones_speak_of_war.jpg',
+		'tsunami.jpg',
+		'vengeance_of_the_dead.jpg',
+		'vigor_of_the_breaking_dawn.jpg',
+		'winds_of_rust_and_atrophy.jpg',
+		'wrap_in_wings_of_sunlight.jpg',
+
+		'call_of_the_dahan_ways.jpg',
+		'call_to_bloodshed.jpg',
+		'call_to_isolation.jpg',
+		'call_to_migrate.jpg',
+		'call_to_tend.jpg',
+		'dark_and_tangled_woods.jpg',
+		'delusions_of_danger.jpg',
+		'devouring_ants.jpg',
+		'drift_down_into_slumber.jpg',
+		'drought.jpg',
+		'elemental_boon.jpg',
+		'encompassing_ward.jpg',
+		'enticing_splendor.jpg',
+		'entrancing_apparitions.jpg',
+		'gift_of_constancy.jpg',
+		'gift_of_living_energy.jpg',
+		'gift_of_power.jpg',
+		'gnawing_rootbiters.jpg',
+		'land_of_haunts_and_embers.jpg',
+		'lure_of_the_unknown.jpg',
+		'natures_resilience.jpg',
+		'pull_beneath_the_hungry_earth.jpg',
+		'purifying_flame.jpg',
+		'quicken_the_earths_struggles.jpg',
+		'rain_of_blood.jpg',
+		'reaching_grasp.jpg',
+		'rouse_the_trees_and_stones.jpg',
+		'sap_the_strength_of_multitudes.jpg',
+		'savage_mawbeasts.jpg',
+		'shadows_of_the_burning_forest.jpg',
+		'song_of_sanctity.jpg',
+		'steam_vents.jpg',
+		'uncanny_melting.jpg',
+		'veil_the_nights_hunt.jpg',
+		'visions_of_fiery_doom.jpg',
+		'voracious_growth.jpg',
+
+		'fields_choked_with_growth.jpg',
+		'gift_of_proliferation.jpg',
+		'overgrow_in_a_night.jpg',
+		'stem_the_flow_of_fresh_water.jpg',
+		'call_on_midnights_dream.jpg',
+		'dread_apparitions.jpg',
+		'dreams_of_the_dahan.jpg',
+		'predatory_nightmares.jpg',
+		'harbingers_of_the_lightning.jpg',
+		'lightnings_boon.jpg',
+		'raging_storm.jpg',
+		'shatter_homesteads.jpg',
+		'call_of_the_deeps.jpg',
+		'grasping_tide.jpg',
+		'swallow_the_landdwellers.jpg',
+		'tidal_boon.jpg',
+		'boon_of_vigor.jpg',
+		'flash_floods.jpg',
+		'rivers_bounty.jpg',
+		'wash_away.jpg',
+		'concealing_shadows.jpg',
+		'crops_wither_and_fade.jpg',
+		'favors_called_due.jpg',
+		'mantle_of_dread.jpg',
+		'manifestation_of_power_and_glory.jpg',
+		'sudden_ambush.jpg',
+		'voice_of_thunder.jpg',
+		'words_of_warning.jpg',
+		'a_year_of_perfect_stillness.jpg',
+		'draw_of_the_fruitful_earth.jpg',
+		'guard_the_healing_land.jpg',
+		'rituals_of_destruction.jpg',
+	];
+
+	let fearNames = [
+		'avoid_the_dahan.jpg',
+		'belief_takes_root.jpg',
+		'dahan_enheartened.jpg',
+		'dahan_on_their_guard.jpg',
+		'dahan_raid.jpg',
+		'emigration_accelerates.jpg',
+		'fear_of_the_unseen.jpg',
+		'isolation.jpg',
+		'overseas_trade_seem_safer.jpg',
+		'retreat.jpg',
+		'scapegoats.jpg',
+		'seek_safety.jpg',
+		'tall_tales_of_savagery.jpg',
+		'trade_suffers.jpg',
+		'wary_of_the_interior.jpg',
+	];
+
+	let loadImage = url =>
+		new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => resolve(img);
+			img.onerror = () => reject(new Error(`load ${url} fail`));
+			img.src = url;
+		});
+
+	let columns = 4;
+	let rowsPerCanvas = 4;
+	let width = 300;
+	let height = (10.5 / rowsPerCanvas) / (8 / columns) * width;
+	console.log(height);
+
+	let createContext = () => {
+		let canvas = document.createElement('canvas');
+		canvas.width = columns * width;
+		canvas.height = rowsPerCanvas * height;
+		document.body.appendChild(canvas);
+		return canvas.getContext('2d');
+	};
+
+	let getIndexes = i => {
+		let canvasI = Math.floor(i / (columns * rowsPerCanvas));
+		let rowI = Math.floor(i / columns) % rowsPerCanvas;
+		let columnI = i % columns;
+		return {
+			canvasI,
+			rowI,
+			columnI,
+			xywh: [columnI * width, rowI * height, width, height],
+		};
+	};
+
+	let doUrls = urls => {
+		let contexts = [...Array(Math.ceil((urls.length - 1) / (columns * rowsPerCanvas)))].map(createContext);
+		urls.forEach(async (url, i) => {
+			let coords = getIndexes(i);
+			contexts[coords.canvasI].drawImage(await loadImage(url), ...coords.xywh);
+		});
+	};
+
+	doUrls(powerNames.map(n => `${powerPrefix}/${n}`));
+	doUrls(fearNames.map(n => `${fearPrefix}/${n}`));
+
+	let blankCardsContext = createContext();
+	blankCardsContext.strokeStyle = 'blue';
+	blankCardsContext.lineWidth  = '10';
+	blankCardsContext.font = 'bold 48px serif';
+	blankCardsContext.textAlign = 'center';
+	blankCardsContext.textBaseline = 'middle';
+	let texts = [
+		'Mountain I',
+		'Jungle I',
+		'Sand I',
+		'Wetland I',
+		'Mountain II',
+		'Jungle II',
+		'Sand II',
+		'Wetland II',
+		'Coastal II',
+		'Mountain Jungle III',
+		'Mountain Sand III',
+		'Mountain Wetland III',
+		'Jungle Sand III',
+		'Jungle Wetland III',
+		'Sand Wetland III',
+	];
+	texts.forEach((text, i) => {
+		let coords = getIndexes(i);
+		blankCardsContext.strokeRect(...coords.xywh);
+		text.split(' ').forEach((line, j, lines) =>
+			blankCardsContext.fillText(line, coords.xywh[0] + coords.xywh[2] / 2, coords.xywh[1] + coords.xywh[3] / 2 + j * 48 * 1 - (lines.length - 1) * 48 / 2));
+	});
+
+	// let terrorBoardContext = createContext();
+	// terrorBoardContext.strokeStyle = 'blue';
+	// for (let i = 0; i < 15; i++) {
+	// 	let coords = getIndexes(i);
+	// 	terrorBoardContext.strokeRect(...coords.xywh);
+	// }
+</script>

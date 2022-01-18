@@ -1,0 +1,997 @@
+<style>
+	body {
+		font-size: 0;
+		margin: 0;
+	}
+
+	.page {
+		width: 8.5in;
+		height: 11in;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.card-set {
+		width: calc((190 + 4 * 2) * 4px);
+		height: calc((250 + 4 * 2) * 4px);
+	}
+
+	.container {
+		width: 190px;
+		height: 250px;
+		border: 4px solid;
+		font-family: sans-serif;
+		display: inline-flex;
+		flex-direction: column;
+		position: relative;
+	}
+
+	.top {
+		flex: 0 0 36px;
+		display: flex;
+		align-items: stretch;
+		font-weight: bold;
+	}
+
+	#cost {
+		border-right: 1px solid;
+		font-size: 18px;
+		flex: 0 0 36px;
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	#name {
+		font-size: 14px;
+		flex-grow: 1;
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+	}
+
+	.middle {
+		font-size: 10px;
+		flex: 0 0 28px;
+		overflow: hidden;
+		outline: 1px solid;
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.middle span {
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+	}
+
+	#speed {
+		flex: 0 0 32px;
+	}
+
+	img {
+		max-width: 100%;
+		max-height: 100%;
+	}
+
+	#speed.fast .speed-slow {
+		display: none;
+	}
+
+	#speed.slow .speed-fast {
+		display: none;
+	}
+
+	#range {
+		flex: 1 0 0;
+		outline: 1px solid;
+	}
+
+	#target {
+		flex: 0 0 64px;
+		overflow: hidden;
+	}
+
+	#body {
+		font-size: 12px;
+		padding: 10px;
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-evenly;
+	}
+
+	#body div {
+		text-align: center;
+	}
+
+	#elements {
+		font-size: 10px;
+		position: absolute;
+		bottom: 2px;
+		left: 2px;
+	}
+
+	#type {
+		font-size: 10px;
+		position: absolute;
+		bottom: 2px;
+		right: 2px;
+	}
+</style>
+
+<body>
+	<template id="card">
+		<div class="container">
+			<div class="top">
+				<span id="cost"></span>
+				<span id="name"></span>
+			</div>
+			<div class="middle">
+				<span id="speed">
+					<img class="speed-slow" src="images/slow.png"></img>
+					<img class="speed-fast" src="images/fast.png"></img>
+				</span>
+				<span id="range"></span>
+				<span id="target"></span>
+			</div>
+			<div id="body"></div>
+			<div id="elements"></div>
+			<div id="type"></div>
+		</div>
+	</template>
+
+	<div id="cards"></div>
+</body>
+
+<script>
+	let data = [{
+		"type": "Lightning",
+		"name": "Shatter Homesteads",
+		"cost": 2,
+		"speed": "Slow",
+		"range": "SacredSite: 2",
+		"target": "Land Any",
+		"elements": "Fire, Air",
+		"description": "1 Fear. Destroy 1 Town.",
+	}, {
+		"type": "Lightning",
+		"name": "Raging Storm",
+		"cost": 3,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Fire, Air, Water",
+		"description": "1 Damage to each Invader.",
+	}, {
+		"type": "Lightning",
+		"name": "Lightning's Boon",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Fire, Air",
+		"description": "Target Spirit may use up to 2 Slow Powers as if they were Fast Powers this turn",
+	}, {
+		"type": "Lightning",
+		"name": "Harbingers of the Lightning",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Fire, Air",
+		"description": "Push up to 2 Dahan. 1 Fear if you pushed any Dahan into a land with Town / City",
+	}, {
+		"type": "River",
+		"name": "Flash Floods",
+		"cost": 2,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Water",
+		"description": "1 Damage. If target land is Coastal, +1 Damage.",
+	}, {
+		"type": "River",
+		"name": "Wash Away",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Water, Earth",
+		"description": "Push up to 3 Explorer / Town",
+	}, {
+		"type": "River",
+		"name": "Boon of Vigor",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Sun, Water, Plant",
+		"description": "If you target yourself, gain 1 Energy. If you target another Spirit, they gain 1 Energy per Power Card they played this turn.",
+	}, {
+		"type": "River",
+		"name": "River's Bounty",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Sun, Water, Animal",
+		"description": "Gather up to 2 Dahan. If there are now at least 2 Dahan, add 1 Dahan and gain 1 Energy.",
+	}, {
+		"type": "Flame",
+		"name": "Concealing Shadows",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Moon, Air",
+		"description": "1 Fear. Dahan take no damage from Ravaging Invaders this turn.",
+	}, {
+		"type": "Flame",
+		"name": "Favors Called Due",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Moon, Air, Animal",
+		"description": "Gather up to 4 Dahan. If Invaders are present and Dahan now outnumber them, 3 Fear.",
+	}, {
+		"type": "Flame",
+		"name": "Mantle of Dread",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Moon, Fire, Air",
+		"description": "2 Fear. Target Spirit may Push 1 Explorer and 1 Town from a land where it has Presence.",
+	}, {
+		"type": "Flame",
+		"name": "Crops Wither and Fade",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Moon, Fire, Plant",
+		"description": "2 Fear. Replace 1 Town with 1 Explorer. -or- Replace 1 City with 1 Town.",
+	}, {
+		"type": "Earth",
+		"name": "Guard the Healing Land",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Water, Earth, Plant",
+		"description": "Remove 1 Blight. Defend 4.",
+	}, {
+		"type": "Earth",
+		"name": "A Year of Perfect Stillness",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Earth",
+		"description": "Invaders skip all Actions in target land this turn.",
+	}, {
+		"type": "Earth",
+		"name": "Rituals of Destruction",
+		"cost": 3,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Dahan",
+		"elements": "Sun, Moon, Fire, Earth, Plant",
+		"description": "2 Damage. If target land has at least 3 Dahan, +3 Damage and 2 Fear.",
+	}, {
+		"type": "Earth",
+		"name": "Draw of the Fruitful Earth",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Earth, Plant, Animal",
+		"description": "Gather up to 2 Explorer. Gather up to 2 Dahan.",
+	}, {
+		"type": "Thunderspeaker",
+		"name": "Manifestation of Power and Glory",
+		"cost": 3,
+		"speed": "Slow",
+		"range": "Presence: 0",
+		"target": "Dahan",
+		"elements": "Sun, Fire, Air",
+		"description": "1 Fear. Each Dahan deals damage equal to the number of your Presence in target land.",
+	}, {
+		"type": "Thunderspeaker",
+		"name": "Words of Warning",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Dahan",
+		"elements": "Sun, Air, Animal",
+		"description": "Defend 3. During Ravage, Dahan in target land deal damage simultaneously with Invaders.",
+	}, {
+		"type": "Thunderspeaker",
+		"name": "Sudden Ambush",
+		"cost": 2,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Fire, Air, Animal",
+		"description": "You may Gather 1 Dahan. Each Dahan destroys 1 Explorer.",
+	}, {
+		"type": "Thunderspeaker",
+		"name": "Voice of Thunder",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Air",
+		"description": "Push up to 4 Dahan. -or- If Invaders are Present, 2 Fear.",
+	}, {
+		"type": "Ocean",
+		"name": "Call of the Deeps",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Coastal",
+		"elements": "Moon, Air, Water",
+		"description": "Gather 1 Explorer. If target land is the Ocean, you may Gather another Explorer.",
+	}, {
+		"type": "Ocean",
+		"name": "Grasping Tide",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Coastal",
+		"elements": "Moon, Water",
+		"description": "2 Fear. Defend 4.",
+	}, {
+		"type": "Ocean",
+		"name": "Swallow the Land-Dwellers",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 0",
+		"target": "Coastal",
+		"elements": "Water, Earth",
+		"description": "Drown 1 Explorer, 1 Town, and 1 Dahan.",
+	}, {
+		"type": "Ocean",
+		"name": "Tidal Boon",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "",
+		"target": "Target Spirit Another",
+		"elements": "Moon, Water, Earth",
+		"description": "Target Spirit gains 2 Energy and may Push 1 Town and up to 2 Dahan from one of their lands. If Dahan are pushed to your ocean, you may move them to any Coastal land instead of Drowning them.",
+	}, {
+		"type": "Nightmares",
+		"name": "Predatory Nightmares",
+		"cost": 2,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Invaders",
+		"elements": "Moon, Fire, Earth, Animal",
+		"description": "2 Damage. Push up to 2 Dahan. (When your powers would destroy Invaders, instead they generate Fear and/or Push those Invaders.)",
+	}, {
+		"type": "Nightmares",
+		"name": "Dread Apparitions",
+		"cost": 2,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Invaders",
+		"elements": "Moon, Air",
+		"description": "When Powers generate Fear in target land, Defend 1 per Fear. 1 Fear. (Fear from To Dream a Thousand Deaths counts. Fear from destroying Town / City does not.)",
+	}, {
+		"type": "Nightmares",
+		"name": "Call on Midnight's Dream",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Moon, Animal",
+		"description": "If target land has Dahan, gain a Major Power. If you Forget this Power, gain Energy equal to Dahan and you may play the Major Power immediately, paying its cost. -or- If Invaders are present, 2 Fear.",
+	}, {
+		"type": "Nightmares",
+		"name": "Dreams of the Dahan",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "Land Any",
+		"elements": "Moon, Air",
+		"description": "Gather up to 2 Dahan. -or- If target land has Town / City, 1 Fear for each Dahan, to a maximum of 3 Fear.",
+	}, {
+		"type": "Green",
+		"name": "Overgrow in a Night",
+		"cost": 2,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Moon, Plant",
+		"description": "Add 1 Presence. -or- If target land has your Presence and Invaders, 3 Fear.",
+	}, {
+		"type": "Green",
+		"name": "Gift of Proliferation",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Another",
+		"elements": "Moon, Plant",
+		"description": "Target Spirit adds 1 Presence up to 1 Range from their Presence.",
+	}, {
+		"type": "Green",
+		"name": "Fields Choked with Growth",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Water, Plant",
+		"description": "Push 1 Town. -or- Push 3 Dahan",
+	}, {
+		"type": "Green",
+		"name": "Stem the Flow of Fresh Water",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Water, Plant",
+		"description": "1 Damage to 1 Town / City. If target land is Mountain / Sands, instead, 1 Damage to each Town / City.",
+	}, {
+		"type": "Minor",
+		"name": "Savage Mawbeasts",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Fire, Animal",
+		"description": "If target land is Jungle / Wetland, 1 Fear and 1 Damage. -If you have- 3 Animal: 1 Damage.",
+	}, {
+		"type": "Minor",
+		"name": "Voracious Growth",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Jungle, Wetland",
+		"elements": "Water, Plant",
+		"description": "2 Damage. -or- Remove 1 Blight.",
+	}, {
+		"type": "Minor",
+		"name": "Rouse the Trees and Stones",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "No Blight",
+		"elements": "Fire, Earth, Plant",
+		"description": "2 Damage. Push 1 Explorer.",
+	}, {
+		"type": "Minor",
+		"name": "Encompassing Ward",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Sun, Water, Earth",
+		"description": "Defend 2 in every land where target Spirit has Presence.",
+	}, {
+		"type": "Minor",
+		"name": "Song of Sanctity",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Mountain, Jungle",
+		"elements": "Sun, Water, Plant",
+		"description": "If target land has 1 Explorer, Push all Explorer. Otherwise, remove 1 Blight.",
+	}, {
+		"type": "Minor",
+		"name": "Uncanny Melting",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Sun, Moon, Water",
+		"description": "If Invaders are present, 1 Fear. If target land is Sands / Wetland, remove 1 Blight",
+	}, {
+		"type": "Minor",
+		"name": "Shadows of the Burning Forest",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 0",
+		"target": "Invaders",
+		"elements": "Moon, Fire, Plant",
+		"description": "2 Fear. If target land is Mountain / Jungle, Push 1 Explorer and 1 Town.",
+	}, {
+		"type": "Minor",
+		"name": "Steam Vents",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Fire, Air, Water, Earth",
+		"description": "Destroy 1 Explorer. -If you have- 3 Earth: You may instead destroy 1 Town.",
+	}, {
+		"type": "Minor",
+		"name": "Veil the Night's Hunt",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "Dahan",
+		"elements": "Moon, Air, Animal",
+		"description": "Each Dahan deals 1 Damage to a different Invader. -or- Push up to 3 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Elemental Boon",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "",
+		"description": "'Target Spirit gains 3 different of their choice. If you target another Spirit, you also gain the chosen '",
+	}, {
+		"type": "Minor",
+		"name": "Devouring Ants",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Sun, Earth, Animal",
+		"description": "1 Fear. 1 Damage. Destroy 1 Dahan. If target land is Jungle / Sands, +1 Damage.",
+	}, {
+		"type": "Minor",
+		"name": "Dark and Tangled Woods",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Moon, Earth, Plant",
+		"description": "2 Fear. If target land is Mountain / Jungle, Defend 3.",
+	}, {
+		"type": "Minor",
+		"name": "Sap the Strength of Multitudes",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Water, Animal",
+		"description": "Defend 5. -If you have- 1 Air: Increase this Power's Range by 1",
+	}, {
+		"type": "Minor",
+		"name": "Drift down into Slumber",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "Land Any",
+		"elements": "Air, Earth, Plant",
+		"description": "Defend 1. If target land is Jungle / Sands, instead, Defend 4.",
+	}, {
+		"type": "Minor",
+		"name": "Land of Haunts and Embers",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "Land Any",
+		"elements": "Moon, Fire, Air",
+		"description": "2 Fear. Push up to 2 Explorer / Town. If target land has Blight, +2 Fear. Push up to 2 more Explorer / Town. Add 1 Blight.",
+	}, {
+		"type": "Minor",
+		"name": "Nature's Resilience",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Earth, Plant, Animal",
+		"description": "Defend 6. -If you have- 2 Water: You may instead remove 1 Blight.",
+	}, {
+		"type": "Minor",
+		"name": "Visions of Fiery Doom",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Moon, Fire",
+		"description": "1 Fear. Push 1 Explorer / Town. -If you have- 2 Fire: +1 Fear.",
+	}, {
+		"type": "Minor",
+		"name": "Pull Beneath the Hungry Earth",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Moon, Water, Earth",
+		"description": "If target land has your Presence, 1 Fear and 1 Damage. If target land is Sands / Wetland, 1 Damage.",
+	}, {
+		"type": "Minor",
+		"name": "Call of the Dahan Ways",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Dahan",
+		"elements": "Moon, Water, Animal",
+		"description": "Replace 1 Explorer with 1 Dahan. -If you have- 2 Moon: You may instead replace 1 Town with 1 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Call to Bloodshed",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Dahan",
+		"elements": "Sun, Fire, Animal",
+		"description": "1 Damage per Dahan. -or- Gather up to 3 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Call to Isolation",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Dahan",
+		"elements": "Sun, Air, Animal",
+		"description": "Push 1 Explorer / Town per Dahan. -or- Push 1 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Call to Migrate",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Fire, Air, Animal",
+		"description": "Gather up to 3 Dahan. Push up to 3 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Call to Tend",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Dahan",
+		"elements": "Water, Plant, Animal",
+		"description": "Remove 1 Blight. -or- Push up to 3 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Quicken the Earth's Struggles",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "SacredSite: 0",
+		"target": "Land Any",
+		"elements": "Moon, Fire, Earth, Animal",
+		"description": "1 Damage to each Town / City. -or- Defend 10.",
+	}, {
+		"type": "Minor",
+		"name": "Delusions of Danger",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Moon, Air",
+		"description": "Push 1 Explorer. -or- 2 Fear.",
+	}, {
+		"type": "Minor",
+		"name": "Drought",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Fire, Earth",
+		"description": "Destroy 3 Town. 1 Damage to each Town / City. Add 1 Blight. -If you have- 3 Sun: Destroy 1 City.",
+	}, {
+		"type": "Minor",
+		"name": "Gift of Constancy",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Sun, Earth",
+		"description": "Target Spirit gains 2 Energy. At end of turn, target Spirit may Reclaim 1 Power Card instead of discarding it. If you target another Spirit, you may also Reclaim 1 Power Card instead of discarding it.",
+	}, {
+		"type": "Minor",
+		"name": "Enticing Splendor",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "No Blight",
+		"elements": "Sun, Air, Plant",
+		"description": "Gather 1 Explorer / Town. -or- Gather up to 2 Dahan.",
+	}, {
+		"type": "Minor",
+		"name": "Entrancing Apparitions",
+		"cost": 1,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Moon, Air, Water",
+		"description": "Defend 2. If no Invaders are present, gather up to 2 Explorer.",
+	}, {
+		"type": "Minor",
+		"name": "Gift of Living Energy",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Sun, Fire, Plant",
+		"description": "Target Spirit gains 1 Energy, +1 Energy if target Spirit is not yourself. If you have at least 2 sacred site, target Spirit gains +1 Energy.",
+	}, {
+		"type": "Minor",
+		"name": "Gift of Power",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Moon, Water, Earth, Plant",
+		"description": "Gain a Minor Power Card.",
+	}, {
+		"type": "Minor",
+		"name": "Gnawing Rootbiters",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Earth, Animal",
+		"description": "Push up to 2 Town.",
+	}, {
+		"type": "Minor",
+		"name": "Lure of the Unknown",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "NoInvaders",
+		"elements": "Moon, Fire, Air, Plant",
+		"description": "Gather 1 Explorer / Town",
+	}, {
+		"type": "Minor",
+		"name": "Purifying Flame",
+		"cost": 1,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Sun, Fire, Air, Plant",
+		"description": "1 Damage per Blight. If target land is Mountain / Sands, you may instead remove 1 Blight.",
+	}, {
+		"type": "Minor",
+		"name": "Rain of Blood",
+		"cost": 0,
+		"speed": "Slow",
+		"range": "SacredSite: 1",
+		"target": "Invaders",
+		"elements": "Air, Water, Animal",
+		"description": "2 Fear. If target land has at least 2 Town / City, +1 Fear.",
+	}, {
+		"type": "Minor",
+		"name": "Reaching Grasp",
+		"cost": 0,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Sun, Air, Water",
+		"description": "Target Spirit gets +2 Range with all their Powers.",
+	}, {
+		"type": "Major",
+		"name": "Accelerated Rot",
+		"cost": 4,
+		"speed": "Slow",
+		"range": "Presence: 2",
+		"target": "Jungle, Wetland",
+		"elements": "Sun, Water, Plant",
+		"description": "2 Fear. 4 Damage. -If you have- 3 Sun, 2 Water, 3 Plant: +5 Damage. Remove 1 Blight.",
+	}, {
+		"type": "Major",
+		"name": "Cleansing Floods",
+		"cost": 5,
+		"speed": "Slow",
+		"range": "Presence on Wetland: 1",
+		"target": "Land Any",
+		"elements": "Sun, Water",
+		"description": "4 Damage. Remove 1 Blight. -If you have- 4 Water: +10 Damage.",
+	}, {
+		"type": "Major",
+		"name": "Pillar of Living Flame",
+		"cost": 5,
+		"speed": "Slow",
+		"range": "SacredSite: 2",
+		"target": "Land Any",
+		"elements": "Fire",
+		"description": "3 Fear. 5 Damage. If target land is Jungle / Wetland, add 1 Blight. -If you have- 4 Fire: +2 Fear and +5 Damage.",
+	}, {
+		"type": "Major",
+		"name": "Poisoned Land",
+		"cost": 3,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Earth, Plant, Animal",
+		"description": "1 Fear. 7 Damage. Add 1 Blight and destroy all Dahan. -If you have- 3 Earth, 2 Plant, 2 Animal: For each Blight then present, +1 Fear and +4 Damage.",
+	}, {
+		"type": "Major",
+		"name": "Terrifying Nightmares",
+		"cost": 4,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "Land Any",
+		"elements": "Moon, Air",
+		"description": "2 Fear. Push up to 4 Explorer / Town. -If you have- 4 Moon: +4 Fear.",
+	}, {
+		"type": "Major",
+		"name": "The Trees and Stones Speak of War",
+		"cost": 2,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Dahan",
+		"elements": "Sun, Earth, Plant",
+		"description": "For each Dahan in target land, 1 Damage and Defend 2. -If you have- 2 Sun, 2 Earth, 2 Plant: You may Push up to 2 Dahan, moving each's Defend with them.",
+	}, {
+		"type": "Major",
+		"name": "Entwined Power",
+		"cost": 2,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Another",
+		"elements": "Moon, Water, Plant",
+		"description": "You and target Spirit may use each other's Presence to target Powers. Target Spirit gains a Power Card. You gain one of the power Cards they did not keep. -If you have- 2 Water, 4 Plant: You and target Spirit each gain 3 Energy and may gift the other 1 Power from hand.",
+	}, {
+		"type": "Major",
+		"name": "Paralyzing Fright",
+		"cost": 4,
+		"speed": "Fast",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Air, Earth",
+		"description": "4 Fear. Invaders skip all Actions in target land this turn. -If you have- 2 Air, 3 Earth: +4 Fear.",
+	}, {
+		"type": "Major",
+		"name": "Powerstorm",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Sun, Fire, Air",
+		"description": "Target Spirit gains 3 Energy. Once this turn, target may Repeat a Power Card by paying its cost again. -If you have- 2 Sun, 2 Fire, 3 Air: Target may Repeat up to 2 more Power Cards by paying their costs.",
+	}, {
+		"type": "Major",
+		"name": "Talons of Lightning",
+		"cost": 6,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Mountain, Wetland",
+		"elements": "Fire, Air",
+		"description": "3 Fear. 5 Damage. -If you have- 3 Fire, 3 Air: Destroy 1 Town in each adjacent land. Increase this power's Range to 3 Range.",
+	}, {
+		"type": "Major",
+		"name": "The Jungle Hungers",
+		"cost": 3,
+		"speed": "Slow",
+		"range": "Presence on Jungle: 1",
+		"target": "Land Any",
+		"elements": "Moon, Plant",
+		"description": "Destroy all Explorer and all Town. Destroy all Dahan. -If you have- 2 Moon, 3 Plant: Destroy 1 City. Do not destroy any Dahan.",
+	}, {
+		"type": "Major",
+		"name": "The Land Thrashes in Furious Pain",
+		"cost": 4,
+		"speed": "Slow",
+		"range": "Presence: 2",
+		"target": "Blight",
+		"elements": "Moon, Fire, Earth",
+		"description": "2 Damage per Blight in target land. +1 Damage per Blight in adjacent lands. -If you have- 3 Moon, 3 Earth: Repeat on an adjacent land.",
+	}, {
+		"type": "Major",
+		"name": "Tsunami",
+		"cost": 6,
+		"speed": "Slow",
+		"range": "SacredSite: 2",
+		"target": "Coastal",
+		"elements": "Water, Earth",
+		"description": "2 Fear. 8 Damage. Destroy 2 Dahan. -If you have- 3 Water, 2 Earth: In each otdher Coastal land on the same board: 1 Fear, 4 Damage, and Destroy 1 Dahan.",
+	}, {
+		"type": "Major",
+		"name": "Vigor of the Breaking Dawn",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "Presence: 2",
+		"target": "Dahan",
+		"elements": "Sun, Animal",
+		"description": "2 Damage per Dahan in target land. -If you have- 3 Sun, 2 Animal: You may Push up to 2 Dahan. In lands you Pushed Dahan to, 2 Damage per Dahan.",
+	}, {
+		"type": "Major",
+		"name": "Vengeance of the Dead",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "Presence: 3",
+		"target": "Land Any",
+		"elements": "Moon, Fire, Animal",
+		"description": "3 Fear. After each effect that destroys Town / City / Dahan in target land, 1 Damage per Town / City / Dahan destroyed. -If you have- 3 Animal: Damage from this Power may be dealt into adjacent lands.",
+	}, {
+		"type": "Major",
+		"name": "Wrap in Wings of Sunlight",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "Presence: 0",
+		"target": "Land Any",
+		"elements": "Sun, Air, Animal",
+		"description": "Move up to 5 Dahan from target land to any land. Defend 5 in that land. -If you have- 2 Sun, 2 Air, 2 Animal: First, Gather up to 3 Dahan.",
+	}, {
+		"type": "Major",
+		"name": "Blazing Renewal",
+		"cost": 5,
+		"speed": "Fast",
+		"range": "",
+		"target": "Target Spirit Any",
+		"elements": "Fire, Earth, Plant",
+		"description": "Target Spirit adds 2 of their destroyed Presence into a single land, up to 2 Range from your Presence. If any Presence was added, 2 damage to each Town / City in that land. -If you have- 3 Fire, 3 Earth, 2 Plant: 4 Damage in that land.",
+	}, {
+		"type": "Major",
+		"name": "Winds of Rust and Atrophy",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "SacredSite: 3",
+		"target": "Land Any",
+		"elements": "Air, Water, Animal",
+		"description": "1 Fear and Defend 6. Replace 1 City with 1 Town or 1 Town with 1 Explorer. -If you have- 3 Air, 3 Water, 2 Animal: Repeat this Power.",
+	}, {
+		"type": "Major",
+		"name": "Indomitable Claim",
+		"cost": 4,
+		"speed": "Fast",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Sun, Earth",
+		"description": "Add 1 Presence in target land even if you normally could not due to land type. Defend 20. -If you have- 2 Sun, 3 Earth: 3 Fear if Invaders are present. Invaders skip all Actions in target land this turn.",
+	}, {
+		"type": "Major",
+		"name": "Mists of Oblivion",
+		"cost": 4,
+		"speed": "Slow",
+		"range": "Presence: 3",
+		"target": "Land Any",
+		"elements": "Moon, Air, Water",
+		"description": "1 Fear per Town / City this Power destroys (to a maximum of 4). 1 Damage to each Invader. -If you have- 2 Moon, 3 Air, 2 Water: 3 Damage.",
+	}, {
+		"type": "Major",
+		"name": "Infinite Vitality",
+		"cost": 3,
+		"speed": "Fast",
+		"range": "SacredSite: 1",
+		"target": "Land Any",
+		"elements": "Earth, Plant, Animal",
+		"description": "Dahan have +4 Health while in target land. Whenever Blight would be added to target land, instead leave it on the card. -If you have- 4 Earth: Dahan ignore Damage and Destruction effects. Remove 1 Blight from target or adjacent land.",
+	}, {
+		"type": "Major",
+		"name": "Dissolve the Bonds of Kinship",
+		"cost": 4,
+		"speed": "Slow",
+		"range": "Presence: 1",
+		"target": "Land Any",
+		"elements": "Fire, Water, Animal",
+		"description": "Replace 1 City with 2 Explorer. Replace 1 Town with 1 Explorer. Replace 1 Dahan with 1 Explorer. Push all Explorer from target land to as many different lands as possible. -If you have- 2 Fire, 2 Water, 3 Animal: Before Pushing, Explorer and Town / City do Damage to each other.",
+	}];
+
+	let newCardSet = () => {
+		let page = document.createElement('div');
+		page.classList.add('page');
+		document.querySelector('#cards').appendChild(page);
+
+		let cardSet = document.createElement('div');
+		cardSet.classList.add('card-set');
+		page.appendChild(cardSet);
+		return cardSet;
+	};
+
+	let cardSet;
+	let template = document.querySelector('#card');
+	data.map((d, i) => {
+		if (!(i % 16))
+			cardSet = newCardSet();
+
+		let clone = template.content.cloneNode(true);
+		clone.querySelector('#cost').textContent = d.cost;
+		clone.querySelector('#name').textContent = d.name;
+		clone.querySelector('#speed').classList.add(d.speed.toLowerCase());
+		clone.querySelector('#range').textContent = d.range;
+		clone.querySelector('#target').textContent = d.target;
+		d.description.split(/(-(?:or|if you have)-)/i).forEach(line => {
+			let bodyLine = document.createElement('div');
+			bodyLine.textContent = line.trim();
+			clone.querySelector('#body').appendChild(bodyLine);
+		});
+		clone.querySelector('#elements').textContent = d.elements;
+		clone.querySelector('#type').textContent = d.type;
+
+		cardSet.appendChild(clone);
+	});
+</script>
